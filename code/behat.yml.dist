@@ -1,0 +1,12 @@
+default:
+    suites:
+        default:
+            paths:
+                - tests/features
+            contexts:
+                - App\Tests\Behat\FeatureContext
+
+    extensions:
+        FriendsOfBehat\SymfonyExtension:
+            kernel:
+                environment: test

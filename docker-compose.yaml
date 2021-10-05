@@ -1,0 +1,41 @@
+version: '3.7'
+
+services:
+  web:
+    image: nginx:latest
+    ports:
+      - '80:80'
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./code/public/index.php:/code/public/index.php
+    links:
+      - php
+
+  php:
+    build:
+      context: ./
+      dockerfile: ./docker/php/Dockerfile
+    environment:
+      APP_ENV: dev
+      APP_SECRET: 0fd61df4f861e05147a9a6a84cdf0992
+      APP_DEBUG: 1
+    volumes:
+      - ./code:/code
+    links:
+      - db
+      - cache
+
+  db:
+    image: mysql:5.7
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: my_budget
+    volumes:
+      - ./docker/mysql/dump:/docker-entrypoint-initdb.d
+
+  cache:
+    image: redis:5
+    ports:
+      - '6379:6379'
