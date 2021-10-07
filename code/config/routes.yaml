@@ -15,4 +15,4 @@ get_transactions:
 get_balance:
   path: /balance
   methods: get
-  controller: App\Controller\BalanceController::get
+  controller: App\Controller\BalanceController::getBalance

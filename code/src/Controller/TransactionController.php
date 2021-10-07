@@ -3,51 +3,52 @@
 namespace App\Controller;
 
 use App\Model\Transaction;
-use App\Repository\TransactionRepository;
+use App\Repository\TransactRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
-class TransactionController
+class TransactionController extends AbstractController
 {
-    private $transactionRepository;
+    public $transactionRepository;
 
-    public function __construct()
+    public function __construct(TransactRepository $transactionRepository)
     {
-        $this->transactionRepository = new TransactionRepository();
+        $this->transactionRepository = $transactionRepository;
     }
 
     public function insert(Request $request): JsonResponse
     {
         $parameters = json_decode($request->getContent());
 
-        $transaction = new Transaction(
-            null,
-            $parameters->title,
-            $parameters->amount
-        );
+        //var_dump($parameters['title']);
 
-        $balance = $this->transactionRepository->getBalance() + $parameters->amount;
+        $transaction = $this->transactionRepository->insert($parameters);
+        //var_dump($transaction);
 
-        $transaction = $this->transactionRepository->insert($transaction);
+        // $transaction = new Transaction(
+        //     null,
+        //     $parameters->title,
+        //     $parameters->amount
+        // );
 
-        return new JsonResponse([
-            'id' => $transaction->getId(),
-            'title' => $parameters->title,
-            'amount' => $parameters->amount,
-            'createdAt' => $transaction->createdAt()->format(DATE_ATOM),
-            'balance' => $balance,
-        ]);
+        // $balance = $this->transactionRepository->getBalance() + $parameters->amount;
+
+        // //$transaction = $this->transactionRepository->insert($transaction);
+
+        // return new JsonResponse([
+        //     'id' => $transaction->getId(),
+        //     'title' => $parameters->title,
+        //     'amount' => $parameters->amount,
+        //     'createdAt' => $transaction->createdAt()->format(DATE_ATOM),
+        //     'balance' => $balance,
+        // ]);
+
+        return new JsonResponse($transaction);
     }
 
     public function all(): JsonResponse
     {
-        return new JsonResponse(array_map(function (Transaction $transaction) {
-            return [
-                'id' => $transaction->getId(),
-                'title' => $transaction->getTitle(),
-                'amount' => $transaction->getAmount(),
-                'createdAt' => $transaction->createdAt()->format(DATE_ATOM),
-            ];
-        }, $this->transactionRepository->getAll()));
+        return new JsonResponse($this->transactionRepository->getAll(),200);
     }
 }

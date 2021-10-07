@@ -2,19 +2,20 @@
 
 namespace App\Controller;
 
-use App\Repository\TransactionRepository;
+use App\Repository\TransactRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
-class BalanceController
+class BalanceController extends AbstractController
 {
     private $transactionRepository;
 
-    public function __construct()
+    public function __construct(TransactRepository $transactionRepository)
     {
-        $this->transactionRepository = new TransactionRepository();
+        $this->transactionRepository = $transactionRepository;
     }
 
-    public function get(): JsonResponse
+    public function getBalance(): JsonResponse
     {
         return new JsonResponse([
             'balance' => $this->transactionRepository->getBalance(),
