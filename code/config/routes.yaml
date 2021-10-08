@@ -16,3 +16,29 @@ get_balance:
   path: /balance
   methods: get
   controller: App\Controller\BalanceController::getBalance
+
+# Refactored version 
+credit_transaction:
+  path: /transaction/credit
+  methods: put
+  controller: App\Controller\TransactionController::credit
+
+debit_transaction:
+  path: /transaction/debit
+  methods: put
+  controller: App\Controller\TransactionController::debit
+
+get_credits:
+  path: /transaction/credits
+  methods: get
+  controller: App\Controller\TransactionController::creditTransactions
+
+get_debits:
+  path: /transaction/debits
+  methods: get
+  controller: App\Controller\TransactionController::debitTransactions
+
+total_balance:
+  path: /total-balance
+  methods: get
+  controller: App\Controller\BalanceController::totalBalance

@@ -19,12 +19,83 @@ class TransactionRepository extends ServiceEntityRepository
         parent::__construct($registry, Transaction::class);
     }
 
+    /**
+     * make a debit or credit transaction
+     */
+    public function makeTransaction($transaction)
+    {
+        $this->getEntityManager()->persist($transaction);
+        $this->getEntityManager()->flush();
+
+        return [
+            'id'=>$transaction->getId(),
+            'title'=>$transaction->getTitle(),
+            'amount'=>$transaction->getAmount(),
+            'type'=>$transaction->getTransactionType(),
+            'balance'=> round($this->totalBalance(),2) 
+        ];
+    }
+
+    /**
+     * get total credit transactions
+     */
+    public function totalCredit()
+    {
+        return $this->createQueryBuilder('t')
+            ->select('SUM(t.amount) as credit')
+            ->where('t.transaction_type = :type')
+            ->setParameter('type','credit')
+            ->getQuery()
+            ->getResult()[0]['credit'];
+    }
+
+    /**
+     * get total debit transactions
+     */
+    public function totalDebit()
+    {
+        return $this->createQueryBuilder('t')
+            ->select('SUM(t.amount) as debit')
+            ->where('t.transaction_type = :type')
+            ->setParameter('type','debit')
+            ->getQuery()
+            ->getResult()[0]['debit'];
+    }
+
+    
+    /**
+     * get total balance
+     */
+    public function totalBalance()
+    {
+        return $this->totalCredit() - $this->totalDebit();
+    }
+
+    /**
+     * all credit transactions
+     */
+    public function allCredits()
+    {
+       return array_filter($this->getAll(), function ($val){
+             return $val['type'] == 'credit';
+        });    
+    }
+
+    /**
+     * all debit transactions
+     */
+    public function allDebits()
+    {
+       return array_filter($this->getAll(), function ($val){
+             return $val['type'] == 'debit';
+        });    
+    }
+
+    /**
+     * generic transaction method
+     */
     public function insert($transaction)
     {
-        // $transact = new Transaction();
-        // $transact->setTitle($parameters->title);
-        // $transact->setAmount($parameters->amount);
-
         $this->getEntityManager()->persist($transaction);
         $this->getEntityManager()->flush();
 
@@ -36,14 +107,21 @@ class TransactionRepository extends ServiceEntityRepository
         ];
     }
 
+    /**
+     * get generic balance
+     * --mostly in-acurate balance
+     */
     public function getBalance()
     {
          return $this->createQueryBuilder('t')
-        ->select('SUM(t.amount) as balance')
-        ->getQuery()
-        ->getResult()[0]['balance'];
+            ->select('SUM(t.amount) as balance')
+            ->getQuery()
+            ->getResult()[0]['balance'];
     }
 
+    /**
+     * all transactions
+     */
     public function getAll()
     {
         return array_map(function (Transaction $transaction) {
@@ -51,37 +129,9 @@ class TransactionRepository extends ServiceEntityRepository
                 'id' => $transaction->getId(),
                 'title' => $transaction->getTitle(),
                 'amount' => $transaction->getAmount(),
+                'type' => $transaction->getTransactionType(),
                 'createdAt' => $transaction->getCreatedAt()->format(DATE_ATOM),
             ];
         }, $this->findAll());
     }
-
-    // /**
-    //  * @return Transact[] Returns an array of Transact objects
-    //  */
-    /*
-    public function findByExampleField($value)
-    {
-        return $this->createQueryBuilder('t')
-            ->andWhere('t.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('t.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
-
-    /*
-    public function findOneBySomeField($value): ?Transact
-    {
-        return $this->createQueryBuilder('t')
-            ->andWhere('t.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
-    }
-    */
 }

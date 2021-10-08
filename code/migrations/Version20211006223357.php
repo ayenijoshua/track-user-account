@@ -20,7 +20,7 @@ final class Version20211006223357 extends AbstractMigration
     public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql('CREATE TABLE transact (transaction_id INT AUTO_INCREMENT NOT NULL, title VARCHAR(255) NOT NULL, amount DOUBLE PRECISION NOT NULL, created_at DATETIME NOT NULL, PRIMARY KEY(transaction_id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+        $this->addSql('CREATE TABLE transactions (transaction_id INT AUTO_INCREMENT NOT NULL, title VARCHAR(255) NOT NULL, amount DOUBLE PRECISION NOT NULL, transaction_type VARCHAR(255) NULL, created_at DATETIME NOT NULL, PRIMARY KEY(transaction_id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
         #$this->addSql('DROP TABLE transactions');
     }
 
@@ -28,6 +28,6 @@ final class Version20211006223357 extends AbstractMigration
     {
         // this down() migration is auto-generated, please modify it to your needs
         #$this->addSql('CREATE TABLE transactions (transaction_id INT UNSIGNED AUTO_INCREMENT NOT NULL, title VARCHAR(255) CHARACTER SET latin1 NOT NULL COLLATE `latin1_swedish_ci`, amount DOUBLE PRECISION NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, PRIMARY KEY(transaction_id)) DEFAULT CHARACTER SET utf8 COLLATE `utf8_unicode_ci` ENGINE = InnoDB COMMENT = \'\' ');
-        $this->addSql('DROP TABLE transact');
+        $this->addSql('DROP TABLE transactions');
     }
 }

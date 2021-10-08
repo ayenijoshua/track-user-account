@@ -31,6 +31,11 @@ class Transaction
     private $amount;
 
     /**
+     * @ORM\Column(type="string")
+     */
+    private $transaction_type;
+
+    /**
      * @ORM\Column(type="datetime")
      */
     private $created_at;
@@ -64,6 +69,18 @@ class Transaction
         return $this;
     }
 
+    // public function getTransactionType(): ?string
+    // {
+    //     return $this->transaction_type;
+    // }
+
+    // public function setTransactionType(string $transaction_type): self
+    // {
+    //     $this->transaction_type = $transaction_type;
+
+    //     return $this;
+    // }
+
     public function getCreatedAt(): ?DateTime
     {
         return $this->created_at;//->format(DATE_ATOM);
@@ -72,6 +89,23 @@ class Transaction
     public function setCreatedAt(\DateTimeInterface $created_at): self
     {
         $this->created_at = $created_at;
+
+        return $this;
+    }
+
+    public function getTransactionId(): ?int
+    {
+        return $this->transaction_id;
+    }
+
+    public function getTransactionType(): ?string
+    {
+        return $this->transaction_type;
+    }
+
+    public function setTransactionType(string $transaction_type): self
+    {
+        $this->transaction_type = $transaction_type;
 
         return $this;
     }

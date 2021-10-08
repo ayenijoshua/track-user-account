@@ -21,4 +21,14 @@ class BalanceController extends AbstractController
             'balance' => $this->transactionRepository->getBalance() ?? 0,
         ]);
     }
+
+    /**
+     * get total account balance (total credit - total debits)
+     */
+    public function totalBalance(): JsonResponse
+    {
+        return new JsonResponse([
+            'balance' => $this->transactionRepository->totalBalance() ?? 0,
+        ]);
+    }
 }
