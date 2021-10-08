@@ -246,7 +246,7 @@ It is always a good practice to have a seperate database for testing. Doctrine a
 ```bash
     $pdo = new PDO('mysql:host=db;dbname=my_budget', 'root', 'root');
 ```
-We could create a test DB and have it referenced here, hence seperating our test and actua data
+We could create a test DB and have it referenced here, hence seperating our test and actual data
 ```bash
     $pdo = new PDO('mysql:host=db;dbname=my_budget_test', 'root', 'root'); // uses test DB
 ```
