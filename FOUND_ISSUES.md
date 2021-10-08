@@ -154,7 +154,7 @@ A better implementation would be to make the controller as lean as possible
 
 2. A method should explicitly be responsible for performing an operation. The existing implementation's         TransactionController "insert" serves dual purpose (debit and credit). This should seperated into two seperate methods (credit and debit) to adhere to the single responsibility principle.
 
-## Semantic naming for controller methods (Design flaw)
+## Non-Semantic naming for controller methods (Design flaw)
 Naming conventions are part of software desing best practices as they help other developers during collaboration.
 It also make you write less comments as your mathod name is descriptive enough. The existing implemetation uses method "insert" for both debit and credit transactions, this is not explicit enough. Having seperate methods for credit and debit transactions would boost the sematics to the application. Below is an example of the design flaw
 
@@ -177,7 +177,7 @@ A better name could be
    }
 ```
 
-## Request validation (Design flaw)
+## Absence of Request validation (Design flaw)
 Request parameters should be validated at the controller level before passing them to the mode/Entity. Validation wasn't considered in TransactionController "insert" method. An example of the flaw is described below.
 
 ```bash
@@ -208,3 +208,46 @@ A better implementation could be
         ///.......
     }
 ```
+## Invalid cache reference (Design error/flaw)
+There is an invalid reference to Redis cache in TransactionRepository "insert" method. This would always return an invalid balance. Below is a decripton of the flaw
+
+```bash
+    public function insert(Transaction $transaction): Transaction
+    {
+        $this->pdo->exec("
+            INSERT INTO transactions (`title`, `amount`)
+            VALUES ('{$transaction->getTitle()}', {$transaction->getAmount()});
+        ");
+
+        $this->cache->del('all_transactions', 'balanse'); // invalid reference (balance)
+
+        ///......
+    }
+```
+The simple fix is
+
+```bash
+    public function insert(Transaction $transaction): Transaction
+    {
+        $this->pdo->exec("
+            INSERT INTO transactions (`title`, `amount`)
+            VALUES ('{$transaction->getTitle()}', {$transaction->getAmount()});
+        ");
+
+        $this->cache->del('all_transactions', 'balance');
+
+        ///......
+    }
+```
+
+## Absence of test Database (Design error/flaw)
+It is always a good practice to have a seperate database for testing. Doctrine also encourages this methodology by using a test database that is different from the main database. Everytime we run our tests, we overide our main database, which might result is loss of data. From the Behat "FeatureContext", the main database is referenced. Below is a descripton of the flaw:
+
+```bash
+    $pdo = new PDO('mysql:host=db;dbname=my_budget', 'root', 'root');
+```
+We could create a test DB and have it referenced here, hence seperating our test and actua data
+```bash
+    $pdo = new PDO('mysql:host=db;dbname=my_budget_test', 'root', 'root'); // uses test DB
+```
+
