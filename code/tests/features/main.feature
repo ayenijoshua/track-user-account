@@ -66,7 +66,7 @@ Feature:
         }
         """
     Then the response code should be 200
-    And the response JSON node "balance" should be equal to 51.36
+    And the response JSON node "balance" should be equal to 111.35
 
     When I make "PUT" request to "/transaction" endpoint with body
         """
@@ -76,4 +76,4 @@ Feature:
         }
         """
     Then the response code should be 200
-    And the response JSON node "balance" should be equal to 99.29
+    And the response JSON node "balance" should be equal to 110.64
