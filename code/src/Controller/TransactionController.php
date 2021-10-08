@@ -3,48 +3,38 @@
 namespace App\Controller;
 
 use App\Model\Transaction;
-use App\Repository\TransactRepository;
+use App\Repository\TransactionRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class TransactionController extends AbstractController
 {
     public $transactionRepository;
 
-    public function __construct(TransactRepository $transactionRepository)
+    public function __construct(TransactionRepository $transactionRepository)
     {
         $this->transactionRepository = $transactionRepository;
     }
 
-    public function insert(Request $request): JsonResponse
+    public function insert(Request $request, ValidatorInterface $validator): JsonResponse
     {
         $parameters = json_decode($request->getContent());
 
-        //var_dump($parameters['title']);
+        $transaction = new Transaction();
+        $transaction->setTitle($parameters->title);
+        $transaction->setAmount($parameters->amount);
 
-        $transaction = $this->transactionRepository->insert($parameters);
-        //var_dump($transaction);
+        $errors = $validator->validate($transaction);
 
-        // $transaction = new Transaction(
-        //     null,
-        //     $parameters->title,
-        //     $parameters->amount
-        // );
+        if (count($errors) > 0) {
+            return new JsonResponse((string) $errors, 442);
+        }
 
-        // $balance = $this->transactionRepository->getBalance() + $parameters->amount;
+        $newTransaction = $this->transactionRepository->insert($transaction);
 
-        // //$transaction = $this->transactionRepository->insert($transaction);
-
-        // return new JsonResponse([
-        //     'id' => $transaction->getId(),
-        //     'title' => $parameters->title,
-        //     'amount' => $parameters->amount,
-        //     'createdAt' => $transaction->createdAt()->format(DATE_ATOM),
-        //     'balance' => $balance,
-        // ]);
-
-        return new JsonResponse($transaction);
+        return new JsonResponse($newTransaction);
     }
 
     public function all(): JsonResponse

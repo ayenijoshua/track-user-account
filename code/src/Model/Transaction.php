@@ -2,40 +2,77 @@
 
 namespace App\Model;
 
+use App\Repository\TransactRepository;
+use Doctrine\ORM\Mapping as ORM;
 use DateTime;
 
+/**
+ * @ORM\Entity(repositoryClass=TransactionRepository::class)
+ * @ORM\Table(name="transactions")
+ */
 class Transaction
 {
-    private $id;
-    private $title;
-    private $amount;
-    private $createdAt;
+    
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
+    private $transaction_id;
 
-    public function __construct(?int $id, string $title, float $amount, DateTime $createdAt = null)
-    {
-        $this->id = $id;
-        $this->title = $title;
-        $this->amount = $amount;
-        $this->createdAt = $createdAt;
-    }
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $title;
+
+    /**
+     * @ORM\Column(type="float")
+     */
+    private $amount;
+
+    /**
+     * @ORM\Column(type="datetime")
+     */
+    private $created_at;
 
     public function getId(): ?int
     {
-        return $this->id;
+        return $this->transaction_id;
     }
 
-    public function getTitle(): string
+    public function getTitle(): ?string
     {
         return $this->title;
     }
 
-    public function getAmount(): float
+    public function setTitle(string $title): self
+    {
+        $this->title = $title;
+
+        return $this;
+    }
+
+    public function getAmount(): ?float
     {
         return $this->amount;
     }
 
-    public function createdAt(): ?DateTime
+    public function setAmount(float $amount): self
     {
-        return $this->createdAt;
+        $this->amount = $amount;
+
+        return $this;
+    }
+
+    public function getCreatedAt(): ?DateTime
+    {
+        return $this->created_at;//->format(DATE_ATOM);
+    }
+
+    public function setCreatedAt(\DateTimeInterface $created_at): self
+    {
+        $this->created_at = $created_at;
+
+        return $this;
     }
 }

@@ -3,80 +3,85 @@
 namespace App\Repository;
 
 use App\Model\Transaction;
-use DateTime;
-use PDO;
-use Symfony\Component\Cache\Adapter\RedisAdapter;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
 
-class TransactionRepository
+/**
+ * @method Transact|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Transact|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Transact[]    findAll()
+ * @method Transact[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ */
+class TransactionRepository extends ServiceEntityRepository
 {
-    private $pdo;
-    private $cache;
-
-    public function __construct()
+    public function __construct(ManagerRegistry $registry)
     {
-        $this->pdo = new PDO('mysql:host=db;dbname=my_budget', 'root', 'root');
-        $this->cache = RedisAdapter::createConnection(
-            'redis://cache'
-        );
+        parent::__construct($registry, Transaction::class);
     }
 
-    public function getBalance(): float
+    public function insert($transaction)
     {
-        $balance = $this->cache->get('balance');
-        if (!empty($balance)) {
-            return $balance;
-        }
+        // $transact = new Transaction();
+        // $transact->setTitle($parameters->title);
+        // $transact->setAmount($parameters->amount);
 
-        $balance = (float)$this->pdo->query("SELECT SUM(amount) FROM transactions")->fetchColumn();
+        $this->getEntityManager()->persist($transaction);
+        $this->getEntityManager()->flush();
 
-        $this->cache->set('balance', $balance);
-
-        return $balance;
+        return [
+            'id'=>$transaction->getId(),
+            'title'=>$transaction->getTitle(),
+            'amount'=>$transaction->getAmount(),
+            'balance'=> round($this->getBalance(),2) 
+        ];
     }
 
-    public function getAll(): array
+    public function getBalance()
     {
-        $transactions = $this->cache->get('all_transactions');
-        if (!empty($transactions)) {
-            return $transactions;
-        }
-
-        $data = $this->pdo->query("SELECT * FROM transactions")->fetchAll(PDO::FETCH_ASSOC);
-
-        if ($data == false) {
-            return [];
-        }
-
-        $transactions = [];
-
-        foreach ($data as $datum) {
-            $transactions[] = new Transaction(
-                $datum['transaction_id'],
-                $datum['title'],
-                $datum['amount'],
-                new DateTime($datum['created_at'])
-            );
-        }
-
-        $this->cache->set('all_transactions', $transactions);
-
-        return $transactions;
+         return $this->createQueryBuilder('t')
+        ->select('SUM(t.amount) as balance')
+        ->getQuery()
+        ->getResult()[0]['balance'];
     }
 
-    public function insert(Transaction $transaction): Transaction
+    public function getAll()
     {
-        $this->pdo->exec("
-            INSERT INTO transactions (`title`, `amount`)
-            VALUES ('{$transaction->getTitle()}', {$transaction->getAmount()});
-        ");
-
-        $this->cache->del('all_transactions', 'balanse');
-
-        return new Transaction(
-            $this->pdo->lastInsertId(),
-            $transaction->getTitle(),
-            $transaction->getAmount(),
-            DateTime::createFromFormat('Y-m-d H:i:s', $this->pdo->query("SELECT created_at FROM transactions")->fetchColumn())
-        );
+        return array_map(function (Transaction $transaction) {
+            return [
+                'id' => $transaction->getId(),
+                'title' => $transaction->getTitle(),
+                'amount' => $transaction->getAmount(),
+                'createdAt' => $transaction->getCreatedAt()->format(DATE_ATOM),
+            ];
+        }, $this->findAll());
     }
+
+    // /**
+    //  * @return Transact[] Returns an array of Transact objects
+    //  */
+    /*
+    public function findByExampleField($value)
+    {
+        return $this->createQueryBuilder('t')
+            ->andWhere('t.exampleField = :val')
+            ->setParameter('val', $value)
+            ->orderBy('t.id', 'ASC')
+            ->setMaxResults(10)
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+    */
+
+    /*
+    public function findOneBySomeField($value): ?Transact
+    {
+        return $this->createQueryBuilder('t')
+            ->andWhere('t.exampleField = :val')
+            ->setParameter('val', $value)
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
+    }
+    */
 }

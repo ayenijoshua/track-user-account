@@ -10,3 +10,4 @@ default:
         FriendsOfBehat\SymfonyExtension:
             kernel:
                 environment: test
+            bootstrap: config/behat/bootstrap.php

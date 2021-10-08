@@ -29,7 +29,7 @@ final class FeatureContext implements Context
     /** @BeforeScenario*/
     public static function prepareForTheFeature()
     {
-        $pdo = new PDO('mysql:host=db;dbname=my_budget', 'root', 'root');
+        $pdo = new PDO('mysql:host=db;dbname=my_budget_test', 'root', 'root');
         $pdo->exec('DELETE FROM transactions');
 
         $cache = RedisAdapter::createConnection(
