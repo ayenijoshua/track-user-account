@@ -78,3 +78,42 @@ curl --location --request GET 'http://localhost/transaction'
 ```bash
 curl --location --request GET 'http://localhost/balance'
 ```
+
+## Added API actions
+
+### make credit transaction
+
+```bash
+curl --location --request PUT 'http://localhost/transaction/credit' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "title": "Salary",
+    "amount": 200
+}'
+```
+### make debit transaction
+
+```bash
+curl --location --request PUT 'http://localhost/transaction/debit' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "title": "Bought a car",
+    "amount": 100
+}'
+```
+### Get list of credit transactions
+
+```bash
+curl --location --request GET 'http://localhost/transaction/credits'
+```
+
+### Get list of debit transactions
+
+```bash
+curl --location --request GET 'http://localhost/transaction/debits'
+```
+### Get total transaction balance
+
+```bash
+curl --location --request GET 'http://localhost/total-balance'
+```
