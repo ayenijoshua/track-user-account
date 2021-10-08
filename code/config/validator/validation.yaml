@@ -1,0 +1,5 @@
+App\Model\Transaction:
+    properties:
+        title:
+            - NotBlank: ~
+            - NotNull: ~
