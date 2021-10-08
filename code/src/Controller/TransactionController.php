@@ -51,7 +51,7 @@ class TransactionController extends AbstractController
         $transaction = new Transaction();
         $transaction->setTitle($parameters->title);
         $transaction->setAmount($parameters->amount);
-        $transaction->setType($transaction_type);
+        $transaction->setTransactionType($transaction_type);
 
         $errors = $validator->validate($transaction);
 
@@ -97,7 +97,7 @@ class TransactionController extends AbstractController
      */
     public function debitTransactions()
     {
-        return new JsonResponse($this->transactionRepository->allDebits());
+        return new JsonResponse($this->transactionRepository->allDebits(),200);
     }
 
     /**
@@ -105,7 +105,7 @@ class TransactionController extends AbstractController
      */
     public function creditTransactions()
     {
-        return new JsonResponse($this->transactionRepository->allCredits());
+        return new JsonResponse($this->transactionRepository->allCredits(),200);
     }
 
     public function all(): JsonResponse

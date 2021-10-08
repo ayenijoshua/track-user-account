@@ -5,18 +5,24 @@ namespace App\Repository;
 use App\Model\Transaction;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Cache\Adapter\RedisAdapter;
 
 /**
- * @method Transact|null find($id, $lockMode = null, $lockVersion = null)
- * @method Transact|null findOneBy(array $criteria, array $orderBy = null)
- * @method Transact[]    findAll()
- * @method Transact[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method Transaction|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Transaction|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Transaction[]    findAll()
+ * @method Transaction[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
 class TransactionRepository extends ServiceEntityRepository
 {
+    private $cache;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Transaction::class);
+        $this->cache =  RedisAdapter::createConnection(
+            'redis://cache'
+        );
     }
 
     /**
@@ -26,6 +32,8 @@ class TransactionRepository extends ServiceEntityRepository
     {
         $this->getEntityManager()->persist($transaction);
         $this->getEntityManager()->flush();
+
+        $this->cache->del('all_transactions','total_balance','total_credit','total_debit','all_credits','all_debits');
 
         return [
             'id'=>$transaction->getId(),
@@ -41,12 +49,22 @@ class TransactionRepository extends ServiceEntityRepository
      */
     public function totalCredit()
     {
-        return $this->createQueryBuilder('t')
+        $credit = $this->cache->get('total_credit');
+
+        if (!empty($credit)) {
+            return $credit;
+        }
+
+        $credit = $this->createQueryBuilder('t')
             ->select('SUM(t.amount) as credit')
             ->where('t.transaction_type = :type')
             ->setParameter('type','credit')
             ->getQuery()
             ->getResult()[0]['credit'];
+
+        $this->cache->set('total_credit', $credit);
+
+        return $credit;
     }
 
     /**
@@ -54,12 +72,22 @@ class TransactionRepository extends ServiceEntityRepository
      */
     public function totalDebit()
     {
-        return $this->createQueryBuilder('t')
+        $debit = $this->cache->get('total_debit');
+
+        if (!empty($debit)) {
+            return $debit;
+        }
+
+        $debit = $this->createQueryBuilder('t')
             ->select('SUM(t.amount) as debit')
             ->where('t.transaction_type = :type')
             ->setParameter('type','debit')
             ->getQuery()
             ->getResult()[0]['debit'];
+
+        $this->cache->set('total_debit', $debit);
+
+        return $debit;
     }
 
     
@@ -68,7 +96,17 @@ class TransactionRepository extends ServiceEntityRepository
      */
     public function totalBalance()
     {
-        return $this->totalCredit() - $this->totalDebit();
+        $balance = $this->cache->get('total_balance');
+
+        if (!empty($balance)) {
+            return $balance;
+        }
+
+        $balance = $this->totalCredit() - $this->totalDebit();
+
+        $this->cache->set('total_balance', $balance);
+
+        return $balance;
     }
 
     /**
@@ -76,9 +114,19 @@ class TransactionRepository extends ServiceEntityRepository
      */
     public function allCredits()
     {
-       return array_filter($this->getAll(), function ($val){
+        $credits = $this->cache->get('all_credits');
+
+        if (!empty($credits)) {
+            return json_decode($credits);
+        }
+
+       $credits = array_filter($this->getAll(), function ($val){
              return $val['type'] == 'credit';
-        });    
+        });
+        
+        $this->cache->set('all_credits', json_encode($credits));
+
+        return $credits;
     }
 
     /**
@@ -86,9 +134,19 @@ class TransactionRepository extends ServiceEntityRepository
      */
     public function allDebits()
     {
-       return array_filter($this->getAll(), function ($val){
-             return $val['type'] == 'debit';
-        });    
+        $debits = $this->cache->get('all_debits');
+
+        if (!empty($debits)) {
+            return json_decode($debits);
+        }
+
+        $debits = array_filter($this->getAll(), function ($val){
+            return $val['type'] == 'debit';
+        });
+        
+        $this->cache->set('all_debits', json_encode($debits));
+
+        return $debits;
     }
 
     /**
@@ -98,6 +156,8 @@ class TransactionRepository extends ServiceEntityRepository
     {
         $this->getEntityManager()->persist($transaction);
         $this->getEntityManager()->flush();
+
+        $this->cache->del('all_transactions', 'balance');
 
         return [
             'id'=>$transaction->getId(),
@@ -109,14 +169,24 @@ class TransactionRepository extends ServiceEntityRepository
 
     /**
      * get generic balance
-     * --mostly in-acurate balance
+     * --mostly inacurate balance
      */
     public function getBalance()
     {
-         return $this->createQueryBuilder('t')
+        $balance = $this->cache->get('balance');
+
+        if (!empty($balance)) {
+            return $balance;
+        }
+
+        $balance = $this->createQueryBuilder('t')
             ->select('SUM(t.amount) as balance')
             ->getQuery()
             ->getResult()[0]['balance'];
+
+        $this->cache->set('balance', $balance);
+
+        return $balance;
     }
 
     /**
@@ -124,7 +194,12 @@ class TransactionRepository extends ServiceEntityRepository
      */
     public function getAll()
     {
-        return array_map(function (Transaction $transaction) {
+        $transactions = $this->cache->get('all_transactions');
+        if (!empty($transactions)) {
+            return json_decode($transactions);
+        }
+
+        $transactions = array_map(function (Transaction $transaction) {
             return [
                 'id' => $transaction->getId(),
                 'title' => $transaction->getTitle(),
@@ -133,5 +208,9 @@ class TransactionRepository extends ServiceEntityRepository
                 'createdAt' => $transaction->getCreatedAt()->format(DATE_ATOM),
             ];
         }, $this->findAll());
+
+        $this->cache->set('all_transactions', json_encode($transactions));
+
+        return $transactions;
     }
 }
