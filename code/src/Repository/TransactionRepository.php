@@ -35,12 +35,15 @@ class TransactionRepository extends ServiceEntityRepository
 
         $this->cache->del('all_transactions','total_balance','total_credit','total_debit','all_credits','all_debits');
 
+        $this->getEntityManager()->refresh($transaction);
+
         return [
             'id'=>$transaction->getId(),
             'title'=>$transaction->getTitle(),
             'amount'=>$transaction->getAmount(),
             'type'=>$transaction->getTransactionType(),
-            'balance'=> round($this->totalBalance(),2) 
+            'balance'=> round($this->totalBalance(),2),
+            'createdAt' => $this->findOneBy(['transaction_id'=>$transaction->getId()])->getCreatedAt()->format(DATE_ATOM)
         ];
     }
 
@@ -159,11 +162,14 @@ class TransactionRepository extends ServiceEntityRepository
 
         $this->cache->del('all_transactions', 'balance');
 
+        $this->getEntityManager()->refresh($transaction);
+
         return [
             'id'=>$transaction->getId(),
             'title'=>$transaction->getTitle(),
             'amount'=>$transaction->getAmount(),
-            'balance'=> round($this->getBalance(),2) 
+            'balance'=> round($this->getBalance(),2),
+            'createdAt' => $this->findOneBy(['transaction_id'=>$transaction->getId()])->getCreatedAt()->format(DATE_ATOM),
         ];
     }
 
