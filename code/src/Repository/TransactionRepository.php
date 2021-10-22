@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Model\Transaction;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use PDO;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 
 /**
@@ -65,7 +66,7 @@ class TransactionRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult()[0]['credit'];
 
-        $this->cache->set('total_credit', $credit);
+        $this->cache->set('total_credit', $credit); 
 
         return $credit;
     }
