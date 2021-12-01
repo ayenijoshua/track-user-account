@@ -1,5 +1,3 @@
- # Shoop.de PHP Developer Case Study
- 
 ## Project overview
 This is an API for the project related to management of personal finances.
 Using it customer can track incomes and expenses, list all previously recorded transactions and get overall balance.
